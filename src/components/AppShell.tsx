@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { actions, useStore } from '@/lib/store';
 import { Avatar, Modal, TypeIcon, btnPrimary, btnSecondary, field } from '@/components/ui';
 import { ItemDialogProvider, useItemDialog } from '@/components/ItemDialog';
+import { ConfirmProvider, Select } from '@/components/controls';
 
 const NAV = [
   { to: '/', label: 'Overview', icon: '▦' },
@@ -16,9 +17,11 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <ItemDialogProvider>
-      <Shell>{children}</Shell>
-    </ItemDialogProvider>
+    <ConfirmProvider>
+      <ItemDialogProvider>
+        <Shell>{children}</Shell>
+      </ItemDialogProvider>
+    </ConfirmProvider>
   );
 }
 
@@ -89,13 +92,13 @@ function Shell({ children }: { children: ReactNode }) {
         <aside className="flex w-56 shrink-0 flex-col border-r border-slate-200 bg-white">
           <div className="border-b border-slate-200 p-3">
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Project</label>
-            <select className={`${field} w-full`} value={s.currentProjectId} onChange={(e) => actions.setProject(e.target.value)}>
+            <Select className={`${field} w-full`} value={s.currentProjectId} onChange={(e) => actions.setProject(e.target.value)}>
               {s.projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
               ))}
-            </select>
+            </Select>
             <button onClick={() => setShowProject(true)} className="mt-2 text-xs text-[#0078d4] hover:underline">
               + New project
             </button>

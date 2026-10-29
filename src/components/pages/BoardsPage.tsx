@@ -4,6 +4,7 @@ import { ITEM_STATES, ITEM_TYPES } from '@/types/pm';
 import type { ItemState, ItemType } from '@/types/pm';
 import { Avatar, PageHeader, PriorityBadge, STATE_COLOR, TYPE_COLOR, TypeIcon, btnPrimary, field } from '@/components/ui';
 import { useItemDialog } from '@/components/ItemDialog';
+import { Select } from '@/components/controls';
 
 export function BoardsPage() {
   const s = useStore();
@@ -51,7 +52,7 @@ export function BoardsPage() {
         </button>
       </PageHeader>
       <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-white px-6 py-3">
-        <select className={field} value={sprintSel} onChange={(e) => setSprintSel(e.target.value)}>
+        <Select className={field} value={sprintSel} onChange={(e) => setSprintSel(e.target.value)}>
           <option value="auto">Current sprint</option>
           <option value="all">All sprints & backlog</option>
           {sprints.map((x) => (
@@ -59,8 +60,8 @@ export function BoardsPage() {
               {x.name}
             </option>
           ))}
-        </select>
-        <select className={field} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+        </Select>
+        <Select className={field} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
           <option value="all">Everyone</option>
           <option value="none">Unassigned</option>
           {s.members.map((m) => (
@@ -68,13 +69,13 @@ export function BoardsPage() {
               {m.name}
             </option>
           ))}
-        </select>
-        <select className={field} value={type} onChange={(e) => setType(e.target.value as 'all' | ItemType)}>
+        </Select>
+        <Select className={field} value={type} onChange={(e) => setType(e.target.value as 'all' | ItemType)}>
           <option value="all">All types</option>
           {ITEM_TYPES.filter((t) => t !== 'Epic').map((t) => (
             <option key={t}>{t}</option>
           ))}
-        </select>
+        </Select>
         <input className={`${field} w-56`} placeholder="Filter by title" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 

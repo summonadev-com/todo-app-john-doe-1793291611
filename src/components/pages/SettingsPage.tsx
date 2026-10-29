@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { actions, useStore } from '@/lib/store';
+import { useConfirm } from '@/components/controls';
 import { Card, PageHeader, btnPrimary, btnSecondary, field } from '@/components/ui';
 
 export function SettingsPage() {
@@ -12,6 +13,7 @@ export function SettingsPage() {
 function Form() {
   const s = useStore();
   const project = s.projects.find((p) => p.id === s.currentProjectId)!;
+  const confirmDlg = useConfirm();
   const [name, setName] = useState(project.name);
   const [key, setKey] = useState(project.key);
   const [description, setDescription] = useState(project.description);
@@ -58,16 +60,18 @@ function Form() {
               className="rounded border border-red-300 px-3.5 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
               disabled={s.projects.length < 2}
               title={s.projects.length < 2 ? 'You need at least one project' : ''}
-              onClick={() => {
-                if (confirm(`Delete "${project.name}" and all of its work items and sprints?`)) actions.deleteProject(project.id);
+              onClick={async () => {
+                if (await confirmDlg({ title: 'Delete project', message: `Delete "${project.name}" and all of its work items and sprints?`, confirmLabel: 'Delete project' }))
+                  actions.deleteProject(project.id);
               }}
             >
               Delete this project
             </button>
             <button
               className={btnSecondary}
-              onClick={() => {
-                if (confirm('Reset everything to the sample data? Your changes will be lost.')) actions.resetDemoData();
+              onClick={async () => {
+                if (await confirmDlg({ title: 'Reset to sample data', message: 'Everything will be replaced with the sample data. Your changes will be lost.', confirmLabel: 'Reset' }))
+                  actions.resetDemoData();
               }}
             >
               Reset to sample data

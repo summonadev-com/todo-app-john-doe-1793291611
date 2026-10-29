@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { actions, useStore } from '@/lib/store';
+import { Select, useConfirm } from '@/components/controls';
 import { Avatar, Card, PageHeader, btnPrimary, field } from '@/components/ui';
 
 const COLORS = ['#0078d4', '#8764b8', '#107c10', '#d83b01', '#038387', '#c239b3', '#986f0b'];
 
 export function TeamPage() {
   const s = useStore();
+  const confirmDlg = useConfirm();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('Developer');
@@ -47,8 +49,9 @@ export function TeamPage() {
                     {m.id !== s.currentUserId && (
                       <button
                         className="text-xs text-red-600 hover:underline"
-                        onClick={() => {
-                          if (confirm(`Remove ${m.name}? Their work items become unassigned.`)) actions.removeMember(m.id);
+                        onClick={async () => {
+                          if (await confirmDlg({ title: 'Remove team member', message: `Remove ${m.name}? Their work items become unassigned.`, confirmLabel: 'Remove' }))
+                            actions.removeMember(m.id);
                         }}
                       >
                         Remove
@@ -73,11 +76,11 @@ export function TeamPage() {
           >
             <input className={`${field} w-full`} placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
             <input type="email" className={`${field} w-full`} placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <select className={`${field} w-full`} value={role} onChange={(e) => setRole(e.target.value)}>
+            <Select className={`${field} w-full`} value={role} onChange={(e) => setRole(e.target.value)}>
               {['Project Manager', 'Developer', 'Designer', 'QA Engineer', 'Stakeholder'].map((r) => (
                 <option key={r}>{r}</option>
               ))}
-            </select>
+            </Select>
             <button className={`${btnPrimary} w-full`} disabled={!name.trim()}>
               Add member
             </button>

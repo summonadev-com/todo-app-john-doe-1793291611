@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { actions, useStore } from '@/lib/store';
 import { ITEM_STATES, ITEM_TYPES } from '@/types/pm';
 import type { ItemState, ItemType, WorkItem } from '@/types/pm';
+import { DateField, Select, useConfirm } from '@/components/controls';
 import { Avatar, Modal, TypeIcon, btnPrimary, btnSecondary, field, priorityLabel } from '@/components/ui';
 
 interface Ctx {
@@ -31,6 +32,7 @@ export function ItemDialogProvider({ children }: { children: ReactNode }) {
 
 function ItemForm({ mode, onClose }: { mode: NonNullable<Mode>; onClose: () => void }) {
   const s = useStore();
+  const confirmDlg = useConfirm();
   const existing = mode.kind === 'edit' ? s.items.find((i) => i.id === mode.id) : undefined;
   const projectId = existing?.projectId ?? s.currentProjectId;
   const project = s.projects.find((p) => p.id === projectId);
@@ -144,51 +146,51 @@ function ItemForm({ mode, onClose }: { mode: NonNullable<Mode>; onClose: () => v
         <div className="space-y-3">
           <div>
             <label className={label}>Type</label>
-            <select className={`${field} w-full`} value={draft.type} onChange={(e) => patch('type', e.target.value as ItemType)}>
+            <Select className={`${field} w-full`} value={draft.type} onChange={(e) => patch('type', e.target.value as ItemType)}>
               {ITEM_TYPES.map((t) => (
                 <option key={t}>{t}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>State</label>
-            <select className={`${field} w-full`} value={draft.state} onChange={(e) => patch('state', e.target.value as ItemState)}>
+            <Select className={`${field} w-full`} value={draft.state} onChange={(e) => patch('state', e.target.value as ItemState)}>
               {ITEM_STATES.map((t) => (
                 <option key={t}>{t}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Assigned to</label>
-            <select className={`${field} w-full`} value={draft.assigneeId ?? ''} onChange={(e) => patch('assigneeId', e.target.value || null)}>
+            <Select className={`${field} w-full`} value={draft.assigneeId ?? ''} onChange={(e) => patch('assigneeId', e.target.value || null)}>
               <option value="">Unassigned</option>
               {s.members.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Priority</label>
-            <select className={`${field} w-full`} value={draft.priority} onChange={(e) => patch('priority', Number(e.target.value) as 1 | 2 | 3 | 4)}>
+            <Select className={`${field} w-full`} value={draft.priority} onChange={(e) => patch('priority', Number(e.target.value) as 1 | 2 | 3 | 4)}>
               {([1, 2, 3, 4] as const).map((p) => (
                 <option key={p} value={p}>
                   {p} - {priorityLabel[p]}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className={label}>Sprint</label>
-            <select className={`${field} w-full`} value={draft.sprintId ?? ''} onChange={(e) => patch('sprintId', e.target.value || null)}>
+            <Select className={`${field} w-full`} value={draft.sprintId ?? ''} onChange={(e) => patch('sprintId', e.target.value || null)}>
               <option value="">Backlog (no sprint)</option>
               {sprints.map((sp) => (
                 <option key={sp.id} value={sp.id}>
                   {sp.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -197,7 +199,7 @@ function ItemForm({ mode, onClose }: { mode: NonNullable<Mode>; onClose: () => v
             </div>
             <div>
               <label className={label}>Due date</label>
-              <input type="date" className={`${field} w-full`} value={draft.dueDate} onChange={(e) => patch('dueDate', e.target.value)} />
+              <DateField className={`${field} w-full`} value={draft.dueDate} onChange={(v) => patch('dueDate', v)} />
             </div>
           </div>
         </div>
@@ -206,8 +208,8 @@ function ItemForm({ mode, onClose }: { mode: NonNullable<Mode>; onClose: () => v
         {existing ? (
           <button
             className="text-sm text-red-600 hover:underline"
-            onClick={() => {
-              if (confirm('Delete this work item permanently?')) {
+            onClick={async () => {
+              if (await confirmDlg({ title: 'Delete work item', message: 'This work item will be permanently deleted.', confirmLabel: 'Delete' })) {
                 actions.deleteItem(existing.id);
                 onClose();
               }

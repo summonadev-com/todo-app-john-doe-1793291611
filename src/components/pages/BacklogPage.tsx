@@ -4,12 +4,14 @@ import { ITEM_STATES, ITEM_TYPES } from '@/types/pm';
 import type { ItemState, ItemType, WorkItem } from '@/types/pm';
 import { Avatar, PageHeader, PriorityBadge, StateBadge, TypeIcon, btnPrimary, btnSecondary, field, fmtDate } from '@/components/ui';
 import { useItemDialog } from '@/components/ItemDialog';
+import { Checkbox, Select, useConfirm } from '@/components/controls';
 
 type SortKey = 'number' | 'title' | 'state' | 'priority' | 'points' | 'dueDate';
 
 export function BacklogPage() {
   const s = useStore();
   const { openItem, newItem } = useItemDialog();
+  const confirmDlg = useConfirm();
   const project = s.projects.find((p) => p.id === s.currentProjectId);
   const sprints = useMemo(() => s.sprints.filter((x) => x.projectId === s.currentProjectId), [s.sprints, s.currentProjectId]);
   const [search, setSearch] = useState('');
@@ -101,20 +103,20 @@ export function BacklogPage() {
       </PageHeader>
       <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-white px-6 py-3">
         <input className={`${field} w-56`} placeholder="Search title, tag or ID" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select className={field} value={type} onChange={(e) => setType(e.target.value as 'all' | ItemType)}>
+        <Select className={field} value={type} onChange={(e) => setType(e.target.value as 'all' | ItemType)}>
           <option value="all">All types</option>
           {ITEM_TYPES.map((t) => (
             <option key={t}>{t}</option>
           ))}
-        </select>
-        <select className={field} value={state} onChange={(e) => setState(e.target.value as 'all' | 'open' | ItemState)}>
+        </Select>
+        <Select className={field} value={state} onChange={(e) => setState(e.target.value as 'all' | 'open' | ItemState)}>
           <option value="open">Open (not closed)</option>
           <option value="all">All states</option>
           {ITEM_STATES.map((t) => (
             <option key={t}>{t}</option>
           ))}
-        </select>
-        <select className={field} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+        </Select>
+        <Select className={field} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
           <option value="all">Anyone</option>
           <option value="none">Unassigned</option>
           {s.members.map((m) => (
@@ -122,8 +124,8 @@ export function BacklogPage() {
               {m.name}
             </option>
           ))}
-        </select>
-        <select className={field} value={sprint} onChange={(e) => setSprint(e.target.value)}>
+        </Select>
+        <Select className={field} value={sprint} onChange={(e) => setSprint(e.target.value)}>
           <option value="all">Any sprint</option>
           <option value="none">Backlog only</option>
           {sprints.map((x) => (
@@ -131,19 +133,19 @@ export function BacklogPage() {
               {x.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {selected.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 bg-blue-50 px-6 py-2 text-sm">
           <b>{selected.length} selected</b>
-          <select className={field} defaultValue="" onChange={(e) => e.target.value && bulk({ state: e.target.value as ItemState })}>
+          <Select className={field} defaultValue="" onChange={(e) => e.target.value && bulk({ state: e.target.value as ItemState })}>
             <option value="">Set state…</option>
             {ITEM_STATES.map((t) => (
               <option key={t}>{t}</option>
             ))}
-          </select>
-          <select className={field} defaultValue="" onChange={(e) => e.target.value && bulk({ assigneeId: e.target.value === 'none' ? null : e.target.value })}>
+          </Select>
+          <Select className={field} defaultValue="" onChange={(e) => e.target.value && bulk({ assigneeId: e.target.value === 'none' ? null : e.target.value })}>
             <option value="">Assign to…</option>
             <option value="none">Unassigned</option>
             {s.members.map((m) => (
@@ -151,8 +153,8 @@ export function BacklogPage() {
                 {m.name}
               </option>
             ))}
-          </select>
-          <select className={field} defaultValue="" onChange={(e) => e.target.value && bulk({ sprintId: e.target.value === 'none' ? null : e.target.value })}>
+          </Select>
+          <Select className={field} defaultValue="" onChange={(e) => e.target.value && bulk({ sprintId: e.target.value === 'none' ? null : e.target.value })}>
             <option value="">Move to sprint…</option>
             <option value="none">Backlog</option>
             {sprints.map((x) => (
@@ -160,11 +162,11 @@ export function BacklogPage() {
                 {x.name}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             className="text-red-600 hover:underline"
-            onClick={() => {
-              if (confirm(`Delete ${selected.length} work items?`)) {
+            onClick={async () => {
+              if (await confirmDlg({ title: 'Delete work items', message: `Delete ${selected.length} selected work item(s)? This cannot be undone.`, confirmLabel: 'Delete' })) {
                 selected.forEach((id) => actions.deleteItem(id));
                 setSelected([]);
               }
@@ -183,7 +185,7 @@ export function BacklogPage() {
           <thead className="border-b border-slate-200 bg-slate-50">
             <tr>
               <th className="w-10 px-3">
-                <input type="checkbox" checked={allSelected} onChange={() => setSelected(allSelected ? [] : rows.map((r) => r.id))} />
+                <Checkbox label="Select all" checked={allSelected} onChange={() => setSelected(allSelected ? [] : rows.map((r) => r.id))} />
               </th>
               {th('ID', 'number')}
               {th('Title', 'title')}
@@ -199,8 +201,7 @@ export function BacklogPage() {
             {rows.map((i) => (
               <tr key={i.id} className="hover:bg-slate-50">
                 <td className="px-3">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selected.includes(i.id)}
                     onChange={() => setSelected((p) => (p.includes(i.id) ? p.filter((x) => x !== i.id) : [...p, i.id]))}
                   />
@@ -226,7 +227,7 @@ export function BacklogPage() {
                   </span>
                 </td>
                 <td className="px-3 py-2">
-                  <select
+                  <Select
                     className="rounded border border-transparent bg-transparent py-0.5 text-sm hover:border-slate-300"
                     value={i.sprintId ?? ''}
                     onChange={(e) => actions.updateItem(i.id, { sprintId: e.target.value || null })}
@@ -237,7 +238,7 @@ export function BacklogPage() {
                         {x.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </td>
                 <td className="px-3 py-2">{i.points || '—'}</td>
                 <td className={`whitespace-nowrap px-3 py-2 ${i.dueDate && i.dueDate < today && i.state !== 'Closed' ? 'font-medium text-red-600' : 'text-slate-500'}`}>

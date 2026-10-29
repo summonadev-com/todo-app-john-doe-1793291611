@@ -4,12 +4,14 @@ import type { Sprint } from '@/types/pm';
 import { Avatar, Card, Modal, PageHeader, StateBadge, TypeIcon, btnPrimary, btnSecondary, field, fmtDate } from '@/components/ui';
 import { Burndown } from '@/components/Burndown';
 import { useItemDialog } from '@/components/ItemDialog';
+import { DateField, useConfirm } from '@/components/controls';
 
 const statusStyle = { Current: 'bg-emerald-100 text-emerald-800', Upcoming: 'bg-blue-100 text-blue-800', Past: 'bg-slate-200 text-slate-600' } as const;
 
 export function SprintsPage() {
   const s = useStore();
   const { openItem, newItem } = useItemDialog();
+  const confirmDlg = useConfirm();
   const sprints = useMemo(
     () => s.sprints.filter((x) => x.projectId === s.currentProjectId).sort((a, b) => a.start.localeCompare(b.start)),
     [s.sprints, s.currentProjectId],
@@ -81,8 +83,8 @@ export function SprintsPage() {
                   </button>
                   <button
                     className="rounded border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                      if (confirm(`Delete ${sel.name}? Its work items move back to the backlog.`)) {
+                    onClick={async () => {
+                      if (await confirmDlg({ title: 'Delete sprint', message: `Delete ${sel.name}? Its work items move back to the backlog.`, confirmLabel: 'Delete' })) {
                         actions.deleteSprint(sel.id);
                         setSelId(null);
                       }
@@ -202,11 +204,11 @@ function SprintDialog({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">Start date</label>
-            <input type="date" className={`${field} w-full`} value={start} onChange={(e) => setStart(e.target.value)} />
+            <DateField className={`${field} w-full`} value={start} onChange={setStart} />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">End date</label>
-            <input type="date" className={`${field} w-full`} value={end} onChange={(e) => setEnd(e.target.value)} />
+            <DateField className={`${field} w-full`} value={end} onChange={setEnd} />
           </div>
         </div>
         {end < start && <p className="text-xs text-red-600">End date must be after the start date.</p>}
