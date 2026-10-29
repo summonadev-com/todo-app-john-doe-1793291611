@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TodoApp } from '@/components/TodoApp';
+import { OverviewPage } from '@/components/pages/OverviewPage';
 
 export const Route = createFileRoute('/')({
-  component: TodoApp,
+  component: OverviewPage,
 });
